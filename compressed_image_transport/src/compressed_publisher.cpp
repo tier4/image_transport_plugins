@@ -87,11 +87,17 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
   std::vector<int> params;
 
   // Get codec configuration
-  compressionFormat encodingFormat = UNDEFINED;
+  compressionFormat encodingFormat = UNDEFINED_FORMAT;
   if (config_.format == compressed_image_transport::CompressedPublisher_jpeg)
     encodingFormat = JPEG;
   if (config_.format == compressed_image_transport::CompressedPublisher_png)
     encodingFormat = PNG;
+
+  compressionColorSpace encodingColorSpace = UNDEFINED_COLOR_SPACE;
+  if (config_.color_space == compressed_image_transport::CompressedPublisher_rgb)
+    encodingColorSpace = RGB;
+  if (config_.color_space == compressed_image_transport::CompressedPublisher_bgr)
+    encodingColorSpace = BGR;
 
   // Bit depth of image encoding
   int bitDepth = enc::bitDepth(message.encoding);
@@ -122,8 +128,16 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         std::string targetFormat;
         if (enc::isColor(message.encoding))
         {
-          // convert color images to BGR8 format
-          targetFormat = "bgr8";
+          // convert color images to RGB8 or BGR8 format
+          if (encodingColorSpace == RGB)
+            targetFormat = "rgb8";
+          else if (encodingColorSpace == BGR)
+            targetFormat = "bgr8";
+          else
+          {
+            ROS_ERROR("Unknown compression color space '%s', valid options are 'rgb' and 'bgr'", config_.color_space.c_str());
+            break;
+          }
           compressed.format += targetFormat;
         }
 
@@ -181,8 +195,18 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         stringstream targetFormat;
         if (enc::isColor(message.encoding))
         {
-          // convert color images to RGB domain
-          targetFormat << "bgr" << bitDepth;
+          // convert color images to RGB or BGR domain
+          if (encodingColorSpace == RGB)
+            targetFormat << "rgb";
+          else if (encodingColorSpace == BGR)
+            targetFormat << "bgr";
+          else
+          {
+            ROS_ERROR("Unknown compression color space '%s', valid options are 'rgb' and 'bgr'", config_.color_space.c_str());
+            break;
+          }
+          
+          targetFormat << bitDepth;
           compressed.format += targetFormat.str();
         }
 

@@ -41,7 +41,13 @@ namespace compressed_image_transport
 // Compression formats
 enum compressionFormat
 {
-  UNDEFINED = -1, JPEG, PNG
+  UNDEFINED_FORMAT = -1, JPEG, PNG
+};
+
+// Compression color space
+enum compressionColorSpace
+{
+  UNDEFINED_COLOR_SPACE = -1, RGB, BGR
 };
 
 } //namespace compressed_image_transport
